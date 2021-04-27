@@ -30,6 +30,10 @@ clone 本仓库后，将该包内容 复制到 `$GOPATH/src`目录下。
     go install  github.com/rogpeppe/godef 
     go install  github.com/sqs/goreturns 
     go install  github.com/kardianos/govendor
+    go install github.com/fatih/gomodifytags
+    go install github.com/josharian/impl
+    go install honnef.co/go/tools/cmd/staticcheck
+    go install golang.org/x/tools/gopls
 
 ```
 
@@ -50,7 +54,7 @@ clone 本仓库后，将该包内容 复制到 `$GOPATH/src`目录下。
 
 3. 删除git 标记。(不然无法提交)
 
-    `find . -name ".git*"|xargs rm -rf`
+    `find . -name ".git*" |grep -v "^./.git$" |xargs rm -rf`
 
 4. 提交 代码到仓库
 
