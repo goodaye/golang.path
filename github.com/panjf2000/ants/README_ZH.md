@@ -1,34 +1,35 @@
-# ants
 <p align="center">
-<img src="https://user-images.githubusercontent.com/7496278/51748488-8efd2600-20e7-11e9-91f5-1c5b466dcca1.jpg"/>
-A goroutine pool for Go
+<img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png" />
+<b>Go 语言的 goroutine 池</b>
 <br/><br/>
-<a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square"></a>
-<a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square"></a>
-<a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square"></a>
-<a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square"></a>
+<a title="Build Status" target="_blank" href="https://travis-ci.com/panjf2000/ants"><img src="https://img.shields.io/travis/com/panjf2000/ants?style=flat-square&logo=travis" /></a>
+<a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=codecov" /></a>
+<a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
+<a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
-<a title="" target="_blank" href="https://golangci.com/r/github.com/panjf2000/ants"><img src="https://golangci.com/badges/github.com/panjf2000/ants.svg"></a>
-<a title="Godoc for ants" target="_blank" href="https://godoc.org/github.com/panjf2000/ants"><img src="https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square"></a>
-<a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/release/panjf2000/ants.svg?style=flat-square"></a>
-<a title="License" target="_blank" href="https://opensource.org/licenses/mit-license.php"><img src="https://img.shields.io/aur/license/pac?style=flat-square"></a>
-<a title="Awesome" target="_blank" href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/badge-flat2.svg"></a>
+<a title="Chat Room" target="_blank" href="https://gitter.im/ants-pool/ants?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=body_badge"><img src="https://badges.gitter.im/ants-pool/ants.svg" /></a>
+<a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/panjf2000/ants"><img src="https://goreportcard.com/badge/github.com/panjf2000/ants?style=flat-square" /></a>
+<a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
+<a title="Ants on Sourcegraph" target="_blank" href="https://sourcegraph.com/github.com/panjf2000/ants?badge"><img src="https://sourcegraph.com/github.com/panjf2000/ants/-/badge.svg?style=flat-square" /></a>
+<a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
 </p>
 
-# [[英文](README.md)]
+[英文](README.md) | 🇨🇳中文
 
-`ants`是一个高性能的协程池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制协程数量，复用资源，达到更高效执行任务的效果。
+## 📖 简介
 
-## 功能：
+`ants`是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
 
-- 实现了自动调度并发的 goroutine，复用 goroutine
-- 定时清理过期的 goroutine，进一步节省资源
-- 提供了友好的接口：任务提交、获取运行中的协程数量、动态调整协程池大小
+## 🚀 功能：
+
+- 自动调度海量的 goroutines，复用 goroutines
+- 定期清理过期的 goroutines，进一步节省资源
+- 提供了大量有用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 Pool 大小、释放 Pool、重启 Pool
 - 优雅处理 panic，防止程序崩溃
-- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有更高的性能
+- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下比原生 goroutine 并发具有[更高的性能](#-性能小结)
 - 非阻塞机制
 
-## 目前测试通过的Golang版本：
+## ⚔️ 目前测试通过的Golang版本：
 
 - 1.8.x
 - 1.9.x
@@ -36,16 +37,42 @@ A goroutine pool for Go
 - 1.11.x
 - 1.12.x
 - 1.13.x
+- 1.14.x
 
+## 💡 `ants` 是如何运行的
 
-## 安装
+### 流程图
 
-``` sh
+<p align="center">
+<img width="845" alt="ants-flowchart-cn" src="https://user-images.githubusercontent.com/7496278/66396519-7ed66e00-ea0c-11e9-9c1a-5ca54bbd61eb.png">
+</p>
+
+### 动态图
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-1.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-2.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-3.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/ants-pool-4.png)
+
+## 🧰 安装
+
+### 使用 `ants` v1 版本:
+
+``` powershell
 go get -u github.com/panjf2000/ants
 ```
 
-## 使用
-写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个协程池，复用 goroutine ，节省资源，提升性能：
+### 使用 `ants` v2 版本 (开启 GO111MODULE=on):
+
+```powershell
+go get -u github.com/panjf2000/ants/v2
+```
+
+## 🛠 使用
+写 go 并发程序的时候如果程序会启动大量的 goroutine ，势必会消耗大量的系统资源（内存，CPU），通过使用 `ants`，可以实例化一个 goroutine 池，复用 goroutine ，节省资源，提升性能：
 
 ``` go
 package main
@@ -109,69 +136,20 @@ func main() {
 }
 ```
 
-## 与 http server 集成
-```go
-package main
-
-import (
-	"io/ioutil"
-	"net/http"
-
-	"github.com/panjf2000/ants/v2"
-)
-
-type Request struct {
-	Param  []byte
-	Result chan []byte
-}
-
-func main() {
-  pool, _ := ants.NewPoolWithFunc(100000, func(payload interface{}) {
-		request, ok := payload.(*Request)
-		if !ok {
-			return
-		}
-		reverseParam := func(s []byte) []byte {
-			for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-				s[i], s[j] = s[j], s[i]
-			}
-			return s
-		}(request.Param)
-
-		request.Result <- reverseParam
-  })
-	defer pool.Release()
-
-	http.HandleFunc("/reverse", func(w http.ResponseWriter, r *http.Request) {
-		param, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "request error", http.StatusInternalServerError)
-		}
-		defer r.Body.Close()
-
-		request := &Request{Param: param, Result: make(chan []byte)}
-
-		// Throttle the requests traffic with ants pool. This process is asynchronous and
-		// you can receive a result from the channel defined outside.
-		if err := pool.Invoke(request); err != nil {
-			http.Error(w, "throttle limit error", http.StatusInternalServerError)
-		}
-
-		w.Write(<-request.Result)
-	})
-
-	http.ListenAndServe(":8080", nil)
-}
-```
-
-## Pool 配置
+### Pool 配置
 
 ```go
+// Option represents the optional function.
+type Option func(opts *Options)
+
+// Options contains all options which will be applied when instantiating a ants pool.
 type Options struct {
-	// ExpiryDuration set the expired time (second) of every worker.
+	// ExpiryDuration is a period for the scavenger goroutine to clean up those expired workers,
+	// the scavenger scans all workers every `ExpiryDuration` and clean up those workers that haven't been
+	// used for more than `ExpiryDuration`.
 	ExpiryDuration time.Duration
 
-	// PreAlloc indicate whether to make memory pre-allocation when initializing Pool.
+	// PreAlloc indicates whether to make memory pre-allocation when initializing Pool.
 	PreAlloc bool
 
 	// Max number of goroutine blocking on pool.Submit.
@@ -186,41 +164,58 @@ type Options struct {
 	// PanicHandler is used to handle panics from each worker goroutine.
 	// if nil, panics will be thrown out again from worker goroutines.
 	PanicHandler func(interface{})
+
+	// Logger is the customized logger for logging info, if it is not set,
+	// default standard logger from log package is used.
+	Logger Logger
 }
 
+// WithOptions accepts the whole options config.
 func WithOptions(options Options) Option {
 	return func(opts *Options) {
 		*opts = options
 	}
 }
 
+// WithExpiryDuration sets up the interval time of cleaning up goroutines.
 func WithExpiryDuration(expiryDuration time.Duration) Option {
 	return func(opts *Options) {
 		opts.ExpiryDuration = expiryDuration
 	}
 }
 
+// WithPreAlloc indicates whether it should malloc for workers.
 func WithPreAlloc(preAlloc bool) Option {
 	return func(opts *Options) {
 		opts.PreAlloc = preAlloc
 	}
 }
 
+// WithMaxBlockingTasks sets up the maximum number of goroutines that are blocked when it reaches the capacity of pool.
 func WithMaxBlockingTasks(maxBlockingTasks int) Option {
 	return func(opts *Options) {
 		opts.MaxBlockingTasks = maxBlockingTasks
 	}
 }
 
+// WithNonblocking indicates that pool will return nil when there is no available workers.
 func WithNonblocking(nonblocking bool) Option {
 	return func(opts *Options) {
 		opts.Nonblocking = nonblocking
 	}
 }
 
+// WithPanicHandler sets up panic handler.
 func WithPanicHandler(panicHandler func(interface{})) Option {
 	return func(opts *Options) {
 		opts.PanicHandler = panicHandler
+	}
+}
+
+// WithLogger sets up a customized logger.
+func WithLogger(logger Logger) Option {
+	return func(opts *Options) {
+		opts.Logger = logger
 	}
 }
 ```
@@ -228,7 +223,7 @@ func WithPanicHandler(panicHandler func(interface{})) Option {
 通过在调用`NewPool`/`NewPoolWithFunc`之时使用各种 optional function，可以设置`ants.Options`中各个配置项的值，然后用它来定制化 goroutine pool.
 
 
-## 自定义池
+### 自定义池
 `ants`支持实例化使用者自己的一个 Pool ，指定具体的池容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 Pool ，如下：
 
 ``` go
@@ -236,15 +231,15 @@ func WithPanicHandler(panicHandler func(interface{})) Option {
 p, _ := ants.NewPool(10000)
 ```
 
-## 任务提交
+### 任务提交
 
 提交任务通过调用 `ants.Submit(func())`方法：
 ```go
 ants.Submit(func(){})
 ```
 
-## 动态调整协程池容量
-需要动态调整协程池容量可以通过调用`Tune(int)`：
+### 动态调整 goroutine 池容量
+需要动态调整 goroutine 池容量可以通过调用`Tune(int)`：
 
 ``` go
 pool.Tune(1000) // Tune its capacity to 1000
@@ -253,31 +248,40 @@ pool.Tune(100000) // Tune its capacity to 100000
 
 该方法是线程安全的。
 
-## 预先分配 goroutine 队列内存
+### 预先分配 goroutine 队列内存
 
-`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高协程池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少 re-slice 时的复制内存损耗。
+`ants`允许你预先把整个池的容量分配内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
 
 ```go
 // ants will pre-malloc the whole capacity of pool when you invoke this function
 p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
 ```
 
-
-
-## 销毁协程池
+### 释放 Pool
 
 ```go
 pool.Release()
 ```
 
-## Benchmarks
+### 重启 Pool
+
+```go
+// 只要调用 Reboot() 方法，就可以重新激活一个之前已经被销毁掉的池，并且投入使用。
+pool.Reboot()
+```
+
+## ⚙️ 关于任务执行顺序
+
+`ants` 并不保证提交的任务被执行的顺序，执行的顺序也不是和提交的顺序保持一致，因为在 `ants` 是并发地处理所有提交的任务，提交的任务会被分派到正在并发运行的 workers 上去，因此那些任务将会被并发且无序地被执行。
+
+## 🧲 Benchmarks
 
 <div align="center"><img src="https://user-images.githubusercontent.com/7496278/51515466-c7ce9e00-1e4e-11e9-89c4-bd3785b3c667.png"/></div>
 上图中的前两个 benchmark 测试结果是基于100w 任务量的条件，剩下的几个是基于 1000w 任务量的测试结果，`ants` 的默认池容量是 5w。
 
 - BenchmarkGoroutine-4 代表原生 goroutine
 
-- BenchmarkPoolGroutine-4 代表使用协程池 `ants`
+- BenchmarkPoolGroutine-4 代表使用 goroutine 池 `ants`
 
 ### Benchmarks with Pool 
 
@@ -305,20 +309,62 @@ pool.Release()
 
 ![](https://user-images.githubusercontent.com/7496278/52987732-537c2000-3437-11e9-86a6-177f00d7a1d6.png)
 
-### 性能小结
+## 📊 性能小结
 
 ![](https://user-images.githubusercontent.com/7496278/63449727-3ae6d400-c473-11e9-81e3-8b3280d8288a.gif)
 
 **从该 demo 测试吞吐性能对比可以看出，使用`ants`的吞吐性能相较于原生 goroutine 可以保持在 2-6 倍的性能压制，而内存消耗则可以达到 10-20 倍的节省优势。** 
 
-# 证书
+## 👏 贡献者
 
-`gnet` 的源码允许用户在遵循 MIT [开源证书](/LICENSE) 规则的前提下使用。
+请在提 PR 之前仔细阅读 [Contributing Guidelines](CONTRIBUTING.md)，感谢那些为 `ants` 贡献过代码的开发者！
 
-# 相关文章 
+[![](https://opencollective.com/ants/contributors.svg?width=890&button=false)](https://github.com/panjf2000/ants/graphs/contributors)
 
--  [Goroutine 并发调度模型深度解析之手撸一个高性能协程池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+## 📄 证书
 
-# 谁在使用 ants（欢迎补充 ~~）
+`ants` 的源码允许用户在遵循 [MIT 开源证书](/LICENSE) 规则的前提下使用。
 
-[![](https://raw.githubusercontent.com/panjf2000/gnet/master/logo.png)](https://github.com/panjf2000/gnet)
+## 📚 相关文章
+
+-  [Goroutine 并发调度模型深度解析之手撸一个高性能 goroutine 池](https://taohuawu.club/high-performance-implementation-of-goroutine-pool)
+-  [Visually Understanding Worker Pool](https://medium.com/coinmonks/visually-understanding-worker-pool-48a83b7fc1f5)
+-  [The Case For A Go Worker Pool](https://brandur.org/go-worker-pool)
+-  [Go Concurrency - GoRoutines, Worker Pools and Throttling Made Simple](https://twinnation.org/articles/39/go-concurrency-goroutines-worker-pools-and-throttling-made-simple)
+
+## 🖥 用户案例
+
+欢迎在这里添加你的案例~~
+
+<a href="https://github.com/panjf2000/gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/go/gnet-logo.svg" width="250" align="middle"/></a>&nbsp;&nbsp;
+<a href="https://www.tencent.com"><img src="https://www.tencent.com/img/index/tencent_logo.png" width="250" align="middle"/></a>&nbsp;&nbsp;
+
+## 🔋 JetBrains 开源证书支持
+
+`ants` 项目一直以来都是在 JetBrains 公司旗下的 GoLand 集成开发环境中进行开发，基于 **free JetBrains Open Source license(s)** 正版免费授权，在此表达我的谢意。
+
+<a href="https://www.jetbrains.com/?from=ants" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
+
+## 💰 支持
+
+如果有意向，可以通过每个月定量的少许捐赠来支持这个项目。
+
+<a href="https://opencollective.com/ants#backers" target="_blank"><img src="https://opencollective.com/ants/backers.svg"></a>
+
+## 💎 赞助
+
+每月定量捐赠 10 刀即可成为本项目的赞助者，届时您的 logo 或者 link 可以展示在本项目的 README 上。
+
+<a href="https://opencollective.com/ants#sponsors" target="_blank"><img src="https://opencollective.com/ants/sponsors.svg"></a>
+
+## ☕️ 打赏
+
+> 当您通过以下方式进行捐赠时，请务必留下姓名、Github账号或其他社交媒体账号，以便我将其添加到捐赠者名单中，以表谢意。
+
+<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/WeChatPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
+<img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/AliPay.JPG" width="250" align="middle"/>&nbsp;&nbsp;
+<a href="https://www.paypal.me/R136a1X" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/payments/PayPal.JPG" width="250" align="middle"/></a>&nbsp;&nbsp;
+
+### 捐赠者名单
+
+<a target="_blank" href="https://github.com/patrick-othmer"><img src="https://avatars1.githubusercontent.com/u/8964313" width="100" alt="Patrick Othmer" /></a>&nbsp;<a target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://avatars2.githubusercontent.com/u/50285334" width="100" alt="Jimmy" /></a>&nbsp;<a target="_blank" href="https://github.com/cafra"><img src="https://avatars0.githubusercontent.com/u/13758306" width="100" alt="ChenZhen" /></a>&nbsp;<a target="_blank" href="https://github.com/yangwenmai"><img src="https://avatars0.githubusercontent.com/u/1710912" width="100" alt="Mai Yang" /></a>

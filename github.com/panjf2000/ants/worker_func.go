@@ -23,7 +23,6 @@
 package ants
 
 import (
-	"log"
 	"runtime"
 	"time"
 )
@@ -49,17 +48,17 @@ func (w *goWorkerWithFunc) run() {
 	go func() {
 		defer func() {
 			w.pool.decRunning()
+			w.pool.workerCache.Put(w)
 			if p := recover(); p != nil {
-				if w.pool.panicHandler != nil {
-					w.pool.panicHandler(p)
+				if ph := w.pool.options.PanicHandler; ph != nil {
+					ph(p)
 				} else {
-					log.Printf("worker with func exits from a panic: %v\n", p)
+					w.pool.options.Logger.Printf("worker with func exits from a panic: %v\n", p)
 					var buf [4096]byte
 					n := runtime.Stack(buf[:], false)
-					log.Printf("worker with func exits from panic: %s\n", string(buf[:n]))
+					w.pool.options.Logger.Printf("worker with func exits from panic: %s\n", string(buf[:n]))
 				}
 			}
-			w.pool.workerCache.Put(w)
 		}()
 
 		for args := range w.args {

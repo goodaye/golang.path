@@ -20,28 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package ants_test
+package ants
 
 import (
+	"log"
+	"os"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/panjf2000/ants/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
-	_ = 1 << (10 * iota)
-	//KiB // 1024
+	_   = 1 << (10 * iota)
+	KiB // 1024
 	MiB // 1048576
-	//GiB // 1073741824
-	//TiB // 1099511627776             (超过了int32的范围)
-	//PiB // 1125899906842624
-	//EiB // 1152921504606846976
-	//ZiB // 1180591620717411303424    (超过了int64的范围)
-	//YiB // 1208925819614629174706176
+	// GiB // 1073741824
+	// TiB // 1099511627776             (超过了int32的范围)
+	// PiB // 1125899906842624
+	// EiB // 1152921504606846976
+	// ZiB // 1180591620717411303424    (超过了int64的范围)
+	// YiB // 1208925819614629174706176
 )
 
 const (
@@ -56,7 +58,7 @@ var curMem uint64
 // TestAntsPoolWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPool(AntsSize)
+	p, _ := NewPool(AntsSize)
 	defer p.Release()
 
 	for i := 0; i < n; i++ {
@@ -76,7 +78,7 @@ func TestAntsPoolWaitToGetWorker(t *testing.T) {
 
 func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPool(AntsSize, ants.WithPreAlloc(true))
+	p, _ := NewPool(AntsSize, WithPreAlloc(true))
 	defer p.Release()
 
 	for i := 0; i < n; i++ {
@@ -97,7 +99,7 @@ func TestAntsPoolWaitToGetWorkerPreMalloc(t *testing.T) {
 // TestAntsPoolWithFuncWaitToGetWorker is used to test waiting to get worker.
 func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) {
+	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
 		wg.Done()
 	})
@@ -117,10 +119,10 @@ func TestAntsPoolWithFuncWaitToGetWorker(t *testing.T) {
 
 func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 	var wg sync.WaitGroup
-	p, _ := ants.NewPoolWithFunc(AntsSize, func(i interface{}) {
+	p, _ := NewPoolWithFunc(AntsSize, func(i interface{}) {
 		demoPoolFunc(i)
 		wg.Done()
-	}, ants.WithPreAlloc(true))
+	}, WithPreAlloc(true))
 	defer p.Release()
 
 	for i := 0; i < n; i++ {
@@ -137,13 +139,13 @@ func TestAntsPoolWithFuncWaitToGetWorkerPreMalloc(t *testing.T) {
 
 // TestAntsPoolGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolGetWorkerFromCache(t *testing.T) {
-	p, _ := ants.NewPool(TestSize)
+	p, _ := NewPool(TestSize)
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
 		_ = p.Submit(demoFunc)
 	}
-	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(2 * DefaultCleanIntervalTime)
 	_ = p.Submit(demoFunc)
 	t.Logf("pool, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -155,13 +157,13 @@ func TestAntsPoolGetWorkerFromCache(t *testing.T) {
 // TestAntsPoolWithFuncGetWorkerFromCache is used to test getting worker from sync.Pool.
 func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 	dur := 10
-	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
+	p, _ := NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
 		_ = p.Invoke(dur)
 	}
-	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(2 * DefaultCleanIntervalTime)
 	_ = p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -172,13 +174,13 @@ func TestAntsPoolWithFuncGetWorkerFromCache(t *testing.T) {
 
 func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 	dur := 10
-	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc, ants.WithPreAlloc(true))
+	p, _ := NewPoolWithFunc(TestSize, demoPoolFunc, WithPreAlloc(true))
 	defer p.Release()
 
 	for i := 0; i < AntsSize; i++ {
 		_ = p.Invoke(dur)
 	}
-	time.Sleep(2 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(2 * DefaultCleanIntervalTime)
 	_ = p.Invoke(dur)
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	mem := runtime.MemStats{}
@@ -190,6 +192,7 @@ func TestAntsPoolWithFuncGetWorkerFromCachePreMalloc(t *testing.T) {
 //-------------------------------------------------------------------------------------------
 // Contrast between goroutines without a pool and goroutines with ants pool.
 //-------------------------------------------------------------------------------------------
+
 func TestNoPool(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
@@ -208,20 +211,20 @@ func TestNoPool(t *testing.T) {
 }
 
 func TestAntsPool(t *testing.T) {
-	defer ants.Release()
+	defer Release()
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		_ = ants.Submit(func() {
+		_ = Submit(func() {
 			demoFunc()
 			wg.Done()
 		})
 	}
 	wg.Wait()
 
-	t.Logf("pool, capacity:%d", ants.Cap())
-	t.Logf("pool, running workers number:%d", ants.Running())
-	t.Logf("pool, free workers number:%d", ants.Free())
+	t.Logf("pool, capacity:%d", Cap())
+	t.Logf("pool, running workers number:%d", Running())
+	t.Logf("pool, free workers number:%d", Free())
 
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
@@ -235,14 +238,12 @@ func TestAntsPool(t *testing.T) {
 func TestPanicHandler(t *testing.T) {
 	var panicCounter int64
 	var wg sync.WaitGroup
-	p0, err := ants.NewPool(10, ants.WithPanicHandler(func(p interface{}) {
+	p0, err := NewPool(10, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 		t.Logf("catch panic with PanicHandler: %v", p)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	wg.Add(1)
 	_ = p0.Submit(func() {
@@ -250,44 +251,31 @@ func TestPanicHandler(t *testing.T) {
 	})
 	wg.Wait()
 	c := atomic.LoadInt64(&panicCounter)
-	if c != 1 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p0.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
-
-	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) { panic(p) }, ants.WithPanicHandler(func(p interface{}) {
+	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
+	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	wg.Add(1)
 	_ = p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
-	if c != 2 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p1.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
+	assert.EqualValuesf(t, 2, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
 }
 
 func TestPanicHandlerPreMalloc(t *testing.T) {
 	var panicCounter int64
 	var wg sync.WaitGroup
-	p0, err := ants.NewPool(10, ants.WithPreAlloc(true), ants.WithPanicHandler(func(p interface{}) {
+	p0, err := NewPool(10, WithPreAlloc(true), WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 		t.Logf("catch panic with PanicHandler: %v", p)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	wg.Add(1)
 	_ = p0.Submit(func() {
@@ -295,170 +283,124 @@ func TestPanicHandlerPreMalloc(t *testing.T) {
 	})
 	wg.Wait()
 	c := atomic.LoadInt64(&panicCounter)
-	if c != 1 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p0.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
-
-	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) { panic(p) }, ants.WithPanicHandler(func(p interface{}) {
+	assert.EqualValuesf(t, 1, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p0.Running(), "pool should be empty after panic")
+	p1, err := NewPoolWithFunc(10, func(p interface{}) { panic(p) }, WithPanicHandler(func(p interface{}) {
 		defer wg.Done()
 		atomic.AddInt64(&panicCounter, 1)
 	}))
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	wg.Add(1)
 	_ = p1.Invoke("Oops!")
 	wg.Wait()
 	c = atomic.LoadInt64(&panicCounter)
-	if c != 2 {
-		t.Errorf("panic handler didn't work, panicCounter: %d", c)
-	}
-	if p1.Running() != 0 {
-		t.Errorf("pool should be empty after panic")
-	}
+	assert.EqualValuesf(t, 2, c, "panic handler didn't work, panicCounter: %d", c)
+	assert.EqualValues(t, 0, p1.Running(), "pool should be empty after panic")
 }
 
 func TestPoolPanicWithoutHandler(t *testing.T) {
-	p0, err := ants.NewPool(10)
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	p0, err := NewPool(10)
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	_ = p0.Submit(func() {
 		panic("Oops!")
 	})
 
-	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p interface{}) {
 		panic(p)
 	})
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke("Oops!")
 }
 
 func TestPoolPanicWithoutHandlerPreMalloc(t *testing.T) {
-	p0, err := ants.NewPool(10, ants.WithPreAlloc(true))
-	if err != nil {
-		t.Fatalf("create new pool failed: %s", err.Error())
-	}
+	p0, err := NewPool(10, WithPreAlloc(true))
+	assert.NoErrorf(t, err, "create new pool failed: %v", err)
 	defer p0.Release()
 	_ = p0.Submit(func() {
 		panic("Oops!")
 	})
 
-	p1, err := ants.NewPoolWithFunc(10, func(p interface{}) {
+	p1, err := NewPoolWithFunc(10, func(p interface{}) {
 		panic(p)
 	})
-	if err != nil {
-		t.Fatalf("create new pool with func failed: %s", err.Error())
-	}
+
+	assert.NoErrorf(t, err, "create new pool with func failed: %v", err)
+
 	defer p1.Release()
 	_ = p1.Invoke("Oops!")
 }
 
 func TestPurge(t *testing.T) {
-	p, err := ants.NewPool(10)
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	p, err := NewPool(10)
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	_ = p.Submit(demoFunc)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
-	p1, err := ants.NewPoolWithFunc(10, demoPoolFunc)
-	if err != nil {
-		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
-	}
+	time.Sleep(3 * DefaultCleanIntervalTime)
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
+	p1, err := NewPoolWithFunc(10, demoPoolFunc)
+	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke(1)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
+	time.Sleep(3 * DefaultCleanIntervalTime)
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 }
 
 func TestPurgePreMalloc(t *testing.T) {
-	p, err := ants.NewPool(10, ants.WithPreAlloc(true))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	p, err := NewPool(10, WithPreAlloc(true))
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	_ = p.Submit(demoFunc)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
-	p1, err := ants.NewPoolWithFunc(10, demoPoolFunc)
-	if err != nil {
-		t.Fatalf("create TimingPoolWithFunc failed: %s", err.Error())
-	}
+	time.Sleep(3 * DefaultCleanIntervalTime)
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
+	p1, err := NewPoolWithFunc(10, demoPoolFunc)
+	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
 	defer p1.Release()
 	_ = p1.Invoke(1)
-	time.Sleep(3 * ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
-	if p.Running() != 0 {
-		t.Error("all p should be purged")
-	}
+	time.Sleep(3 * DefaultCleanIntervalTime)
+	assert.EqualValues(t, 0, p.Running(), "all p should be purged")
 }
 
 func TestNonblockingSubmit(t *testing.T) {
 	poolSize := 10
-	p, err := ants.NewPool(poolSize, ants.WithNonblocking(true))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	p, err := NewPool(poolSize, WithNonblocking(true))
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Submit(longRunningFunc); err != nil {
-			t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Submit(longRunningFunc), "nonblocking submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
+	ch1 := make(chan struct{})
 	f := func() {
 		<-ch
+		close(ch1)
 	}
 	// p is full now.
-	if err := p.Submit(f); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
-	if err := p.Submit(demoFunc); err == nil || err != ants.ErrPoolOverload {
-		t.Fatalf("nonblocking submit when pool is full should get an ErrPoolOverload")
-	}
+	assert.NoError(t, p.Submit(f), "nonblocking submit when pool is not full shouldn't return error")
+	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(),
+		"nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
-	time.Sleep(1 * time.Second)
-	if err := p.Submit(demoFunc); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
+	<-ch1
+	assert.NoError(t, p.Submit(demoFunc), "nonblocking submit when pool is not full shouldn't return error")
 }
 
 func TestMaxBlockingSubmit(t *testing.T) {
 	poolSize := 10
-	p, err := ants.NewPool(poolSize, ants.WithMaxBlockingTasks(1))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	p, err := NewPool(poolSize, WithMaxBlockingTasks(1))
+	assert.NoErrorf(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Submit(longRunningFunc); err != nil {
-			t.Fatalf("submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Submit(longRunningFunc), "submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	f := func() {
 		<-ch
 	}
 	// p is full now.
-	if err := p.Submit(f); err != nil {
-		t.Fatalf("submit when pool is not full shouldn't return error")
-	}
+	assert.NoError(t, p.Submit(f), "submit when pool is not full shouldn't return error")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	errCh := make(chan error, 1)
@@ -471,9 +413,8 @@ func TestMaxBlockingSubmit(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 	// already reached max blocking limit
-	if err := p.Submit(demoFunc); err != ants.ErrPoolOverload {
-		t.Fatalf("blocking submit when pool reach max blocking submit should return ErrPoolOverload")
-	}
+	assert.EqualError(t, p.Submit(demoFunc), ErrPoolOverload.Error(),
+		"blocking submit when pool reach max blocking submit should return ErrPoolOverload")
 	// interrupt f to make blocking submit successful.
 	close(ch)
 	wg.Wait()
@@ -486,49 +427,38 @@ func TestMaxBlockingSubmit(t *testing.T) {
 
 func TestNonblockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
-	p, err := ants.NewPoolWithFunc(poolSize, longRunningPoolFunc, ants.WithNonblocking(true))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	ch1 := make(chan struct{})
+	p, err := NewPoolWithFunc(poolSize, func(i interface{}) {
+		longRunningPoolFunc(i)
+		close(ch1)
+	}, WithNonblocking(true))
+	assert.NoError(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Invoke(nil); err != nil {
-			t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Invoke(nil), "nonblocking submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	// p is full now.
-	if err := p.Invoke(ch); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
-	if err := p.Invoke(nil); err == nil || err != ants.ErrPoolOverload {
-		t.Fatalf("nonblocking submit when pool is full should get an ErrPoolOverload")
-	}
+	assert.NoError(t, p.Invoke(ch), "nonblocking submit when pool is not full shouldn't return error")
+	assert.EqualError(t, p.Invoke(nil), ErrPoolOverload.Error(),
+		"nonblocking submit when pool is full should get an ErrPoolOverload")
 	// interrupt f to get an available worker
 	close(ch)
-	time.Sleep(1 * time.Second)
-	if err := p.Invoke(nil); err != nil {
-		t.Fatalf("nonblocking submit when pool is not full shouldn't return error")
-	}
+	<-ch1
+	assert.NoError(t, p.Invoke(nil), "nonblocking submit when pool is not full shouldn't return error")
 }
 
 func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	poolSize := 10
-	p, err := ants.NewPoolWithFunc(poolSize, longRunningPoolFunc, ants.WithMaxBlockingTasks(1))
-	if err != nil {
-		t.Fatalf("create TimingPool failed: %s", err.Error())
-	}
+	p, err := NewPoolWithFunc(poolSize, longRunningPoolFunc, WithMaxBlockingTasks(1))
+	assert.NoError(t, err, "create TimingPool failed: %v", err)
 	defer p.Release()
 	for i := 0; i < poolSize-1; i++ {
-		if err := p.Invoke(Param); err != nil {
-			t.Fatalf("submit when pool is not full shouldn't return error")
-		}
+		assert.NoError(t, p.Invoke(Param), "submit when pool is not full shouldn't return error")
 	}
 	ch := make(chan struct{})
 	// p is full now.
-	if err := p.Invoke(ch); err != nil {
-		t.Fatalf("submit when pool is not full shouldn't return error")
-	}
+	assert.NoError(t, p.Invoke(ch), "submit when pool is not full shouldn't return error")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	errCh := make(chan error, 1)
@@ -541,9 +471,8 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	}()
 	time.Sleep(1 * time.Second)
 	// already reached max blocking limit
-	if err := p.Invoke(Param); err != ants.ErrPoolOverload {
-		t.Fatalf("blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
-	}
+	assert.EqualErrorf(t, p.Invoke(Param), ErrPoolOverload.Error(),
+		"blocking submit when pool reach max blocking submit should return ErrPoolOverload: %v", err)
 	// interrupt one func to make blocking submit successful.
 	close(ch)
 	wg.Wait()
@@ -553,24 +482,101 @@ func TestMaxBlockingSubmitWithFunc(t *testing.T) {
 	default:
 	}
 }
+
+func TestRebootDefaultPool(t *testing.T) {
+	defer Release()
+	Reboot()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	_ = Submit(func() {
+		demoFunc()
+		wg.Done()
+	})
+	wg.Wait()
+	Release()
+	assert.EqualError(t, Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
+	Reboot()
+	wg.Add(1)
+	assert.NoError(t, Submit(func() { wg.Done() }), "pool should be rebooted")
+	wg.Wait()
+}
+
+func TestRebootNewPool(t *testing.T) {
+	var wg sync.WaitGroup
+	p, err := NewPool(10)
+	assert.NoErrorf(t, err, "create Pool failed: %v", err)
+	defer p.Release()
+	wg.Add(1)
+	_ = p.Submit(func() {
+		demoFunc()
+		wg.Done()
+	})
+	wg.Wait()
+	p.Release()
+	assert.EqualError(t, p.Submit(nil), ErrPoolClosed.Error(), "pool should be closed")
+	p.Reboot()
+	wg.Add(1)
+	assert.NoError(t, p.Submit(func() { wg.Done() }), "pool should be rebooted")
+	wg.Wait()
+
+	p1, err := NewPoolWithFunc(10, func(i interface{}) {
+		demoPoolFunc(i)
+		wg.Done()
+	})
+	assert.NoErrorf(t, err, "create TimingPoolWithFunc failed: %v", err)
+	defer p1.Release()
+	wg.Add(1)
+	_ = p1.Invoke(1)
+	wg.Wait()
+	p1.Release()
+	assert.EqualError(t, p1.Invoke(nil), ErrPoolClosed.Error(), "pool should be closed")
+	p1.Reboot()
+	wg.Add(1)
+	assert.NoError(t, p1.Invoke(1), "pool should be rebooted")
+	wg.Wait()
+}
+
+func TestInfinitePool(t *testing.T) {
+	c := make(chan struct{})
+	p, _ := NewPool(-1)
+	_ = p.Submit(func() {
+		_ = p.Submit(func() {
+			<-c
+		})
+	})
+	c <- struct{}{}
+	if n := p.Running(); n != 2 {
+		t.Errorf("expect 2 workers running, but got %d", n)
+	}
+	p.Tune(10)
+	if capacity := p.Cap(); capacity != -1 {
+		t.Fatalf("expect capacity: -1 but got %d", capacity)
+	}
+	var err error
+	p, err = NewPool(-1, WithPreAlloc(true))
+	if err != ErrInvalidPreAllocSize {
+		t.Errorf("expect ErrInvalidPreAllocSize but got %v", err)
+	}
+}
+
 func TestRestCodeCoverage(t *testing.T) {
-	_, err := ants.NewPool(-1, ants.WithExpiryDuration(-1))
+	_, err := NewPool(-1, WithExpiryDuration(-1))
 	t.Log(err)
-	_, err = ants.NewPool(1, ants.WithExpiryDuration(-1))
+	_, err = NewPool(1, WithExpiryDuration(-1))
 	t.Log(err)
-	_, err = ants.NewPoolWithFunc(-1, demoPoolFunc, ants.WithExpiryDuration(-1))
+	_, err = NewPoolWithFunc(-1, demoPoolFunc, WithExpiryDuration(-1))
 	t.Log(err)
-	_, err = ants.NewPoolWithFunc(1, demoPoolFunc, ants.WithExpiryDuration(-1))
+	_, err = NewPoolWithFunc(1, demoPoolFunc, WithExpiryDuration(-1))
 	t.Log(err)
 
-	options := ants.Options{}
+	options := Options{}
 	options.ExpiryDuration = time.Duration(10) * time.Second
 	options.Nonblocking = true
 	options.PreAlloc = true
-	poolOpts, _ := ants.NewPool(1, ants.WithOptions(options))
+	poolOpts, _ := NewPool(1, WithOptions(options))
 	t.Logf("Pool with options, capacity: %d", poolOpts.Cap())
 
-	p0, _ := ants.NewPool(TestSize)
+	p0, _ := NewPool(TestSize, WithLogger(log.New(os.Stderr, "", log.LstdFlags)))
 	defer func() {
 		_ = p0.Submit(demoFunc)
 	}()
@@ -585,7 +591,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	p0.Tune(TestSize / 10)
 	t.Logf("pool, after tuning capacity, capacity:%d, running:%d", p0.Cap(), p0.Running())
 
-	pprem, _ := ants.NewPool(TestSize, ants.WithPreAlloc(true))
+	pprem, _ := NewPool(TestSize, WithPreAlloc(true))
 	defer func() {
 		_ = pprem.Submit(demoFunc)
 	}()
@@ -600,7 +606,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	pprem.Tune(TestSize / 10)
 	t.Logf("pre-malloc pool, after tuning capacity, capacity:%d, running:%d", pprem.Cap(), pprem.Running())
 
-	p, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc)
+	p, _ := NewPoolWithFunc(TestSize, demoPoolFunc)
 	defer func() {
 		_ = p.Invoke(Param)
 	}()
@@ -608,7 +614,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	for i := 0; i < n; i++ {
 		_ = p.Invoke(Param)
 	}
-	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(DefaultCleanIntervalTime)
 	t.Logf("pool with func, capacity:%d", p.Cap())
 	t.Logf("pool with func, running workers number:%d", p.Running())
 	t.Logf("pool with func, free workers number:%d", p.Free())
@@ -616,7 +622,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	p.Tune(TestSize / 10)
 	t.Logf("pool with func, after tuning capacity, capacity:%d, running:%d", p.Cap(), p.Running())
 
-	ppremWithFunc, _ := ants.NewPoolWithFunc(TestSize, demoPoolFunc, ants.WithPreAlloc(true))
+	ppremWithFunc, _ := NewPoolWithFunc(TestSize, demoPoolFunc, WithPreAlloc(true))
 	defer func() {
 		_ = ppremWithFunc.Invoke(Param)
 	}()
@@ -624,7 +630,7 @@ func TestRestCodeCoverage(t *testing.T) {
 	for i := 0; i < n; i++ {
 		_ = ppremWithFunc.Invoke(Param)
 	}
-	time.Sleep(ants.DEFAULT_CLEAN_INTERVAL_TIME * time.Second)
+	time.Sleep(DefaultCleanIntervalTime)
 	t.Logf("pre-malloc pool with func, capacity:%d", ppremWithFunc.Cap())
 	t.Logf("pre-malloc pool with func, running workers number:%d", ppremWithFunc.Running())
 	t.Logf("pre-malloc pool with func, free workers number:%d", ppremWithFunc.Free())
